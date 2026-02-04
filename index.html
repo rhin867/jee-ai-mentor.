@@ -3,297 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced JEE AI CBT & Mentor</title>
+    <title>Advanced JEE CBT Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+    <style>
+        .cbt-header { background-color: #2b3a67; color: white; }
+        .palette-btn { width: 35px; height: 35px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .answered { background-color: #27ae60; color: white; clip-path: polygon(0% 20%, 0% 80%, 50% 100%, 100% 80%, 100% 20%, 50% 0%); }
+        .visited { background-color: #e74c3c; color: white; border-radius: 50% 50% 0 0; }
+        .not-visited { background-color: #f1f2f6; color: #57606f; border: 1px solid #dcdde1; }
+        .marked { background-color: #8e44ad; color: white; border-radius: 50%; }
+    </style>
 </head>
-<body class="bg-[#0a0a0c] text-white overflow-x-hidden">
+<body class="bg-gray-100 font-sans overflow-hidden">
 
-    <div id="screen-upload" class="min-h-screen flex flex-col items-center justify-center p-4">
-        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-2">ADVANCED AI MENTOR</h1>
-        <p class="text-gray-400 mb-8">NTA Style CBT + Deep Analysis + Weekly Plan</p>
+<div id="screen-start" class="h-screen flex flex-col items-center justify-center bg-[#0f172a] text-white p-6">
+    <div class="max-w-xl w-full text-center space-y-6">
+        <h1 class="text-5xl font-extrabold text-blue-400 italic">Advanced Analysis AI</h1>
+        <p class="text-gray-400">JEE/Advanced CBT Interface with Deep Post-Test Intelligence</p>
         
-        <div class="bg-gray-900/50 p-8 rounded-2xl border border-gray-800 backdrop-blur-xl w-full max-w-md shadow-2xl">
-            <div id="upload-box" class="border-2 border-dashed border-cyan-500/50 rounded-xl p-8 text-center cursor-pointer hover:bg-cyan-500/5 transition">
-                <input type="file" id="pdf-file" class="hidden" accept=".pdf">
-                <p class="text-cyan-400 font-bold">Upload JEE PDF Paper</p>
-                <p class="text-xs text-gray-500 mt-2">Diagrams & Math handled by Vision AI</p>
+        <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
+            <div id="dropzone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-blue-500/50 p-10 rounded-xl hover:bg-blue-500/5 transition cursor-pointer group">
+                <input type="file" id="file-input" class="hidden" accept=".pdf">
+                <p class="text-xl font-bold group-hover:text-blue-400">Click to Upload JEE PDF Paper</p>
+                <p class="text-sm text-gray-500 mt-2">Any size, unlimited pages supported</p>
             </div>
-            <div id="status" class="mt-4 text-sm text-yellow-500 text-center font-mono"></div>
+            <div id="loader" class="hidden mt-4 space-y-2">
+                <div class="w-full bg-gray-700 rounded-full h-2">
+                    <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+                <p id="status-text" class="text-xs text-blue-300 font-mono">Initializing AI...</p>
+            </div>
         </div>
     </div>
+</div>
 
-    <div id="screen-exam" class="hidden h-screen flex flex-col bg-white text-black">
-        <div class="bg-indigo-900 text-white p-3 flex justify-between items-center shadow-lg">
-            <div class="font-bold flex items-center gap-2">
-                <span class="bg-red-600 px-2 py-0.5 rounded text-xs uppercase">JEE-Main</span>
-                <span id="exam-timer" class="font-mono text-xl">03:00:00</span>
-            </div>
-            <button onclick="finishTest()" class="bg-green-600 hover:bg-green-700 px-6 py-1 rounded font-bold transition">SUBMIT TEST</button>
-        </div>
-
-        <div class="flex-1 flex overflow-hidden">
-            <div class="flex-1 flex flex-col border-r relative overflow-y-auto bg-gray-50 p-6">
-                <div class="flex justify-between border-b pb-2 mb-4">
-                    <span id="q-subject" class="font-bold text-indigo-800">PHYSICS</span>
-                    <span id="q-number" class="text-gray-500">Question 1</span>
-                </div>
-                <div id="q-text" class="text-lg mb-6 leading-relaxed">Loading question...</div>
-                <div id="q-image-container" class="mb-6 hidden border-2 border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                    <img id="q-image" src="" class="w-full object-contain max-h-[400px]">
-                </div>
-                <div id="options-area" class="grid gap-3"></div>
-            </div>
-
-            <div class="w-80 bg-gray-100 flex flex-col border-l shadow-inner">
-                <div class="p-4 bg-gray-200 font-bold border-b text-sm">QUESTION PALETTE</div>
-                <div id="palette" class="flex-1 p-4 grid grid-cols-4 gap-2 content-start overflow-y-auto"></div>
-                <div class="p-4 border-t bg-white text-[10px] grid grid-cols-2 gap-2">
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded-sm"></span> Answered</div>
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-sm"></span> Not Answered</div>
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 bg-gray-300 rounded-sm"></span> Not Visited</div>
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 bg-purple-500 rounded-sm"></span> Review</div>
-                </div>
+<div id="screen-exam" class="hidden h-screen flex flex-col bg-white overflow-hidden">
+    <header class="cbt-header p-3 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-4">
+            <span class="bg-white/10 px-3 py-1 rounded text-xs">JEE (MAIN/ADV)</span>
+            <div class="h-8 w-[1px] bg-white/20"></div>
+            <div id="section-nav" class="flex gap-2">
+                <button onclick="filterSub('Maths')" class="bg-blue-500 px-4 py-1 rounded text-sm font-bold">Maths</button>
+                <button onclick="filterSub('Physics')" class="bg-slate-700 px-4 py-1 rounded text-sm font-bold">Physics</button>
+                <button onclick="filterSub('Chemistry')" class="bg-slate-700 px-4 py-1 rounded text-sm font-bold">Chemistry</button>
             </div>
         </div>
-
-        <div class="p-4 bg-white border-t flex justify-between shadow-2xl">
-            <button onclick="prevQ()" class="px-8 py-2 border rounded hover:bg-gray-100">PREVIOUS</button>
-            <button onclick="nextQ()" class="px-8 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">NEXT & SAVE</button>
+        <div class="flex items-center gap-6">
+            <div class="text-xl font-mono" id="main-timer">03:00:00</div>
+            <button onclick="submitExam()" class="bg-green-600 px-6 py-1 rounded font-bold hover:bg-green-700">SUBMIT</button>
         </div>
-    </div>
+    </header>
 
-    <div id="screen-analysis" class="hidden min-h-screen bg-[#0f1115] p-6 text-white pb-20">
-        <div class="max-w-6xl mx-auto">
-            <h1 class="text-3xl font-bold mb-8 flex items-center gap-3">
-                <span class="bg-cyan-500 w-2 h-8 rounded-full"></span> ADVANCED PERFORMANCE ANALYSIS
-            </h1>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest">Score</p>
-                    <h2 id="final-score" class="text-4xl font-black text-cyan-400">0</h2>
-                </div>
-                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest">Accuracy</p>
-                    <h2 id="final-acc" class="text-4xl font-black text-green-400">0%</h2>
-                </div>
-                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest">Potential Score</p>
-                    <h2 id="final-potential" class="text-4xl font-black text-purple-400">0</h2>
-                </div>
-                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest">Wrong Answers</p>
-                    <h2 id="final-wrong" class="text-4xl font-black text-red-500">0</h2>
-                </div>
+    <div class="flex-1 flex overflow-hidden">
+        <main class="flex-1 flex flex-col relative bg-white border-r">
+            <div class="bg-gray-100 p-2 border-b text-sm flex justify-between font-bold text-gray-700">
+                <span id="current-subject-label">SECTION: MATHEMATICS</span>
+                <span id="q-label">Question No. 1</span>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                <div class="bg-indigo-900/30 border border-indigo-500/30 p-8 rounded-3xl backdrop-blur-xl">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">✨ AI PERSONAL MENTOR</h3>
-                    <div id="mentor-text" class="text-indigo-200 text-sm leading-relaxed space-y-4">
-                        Analysing your performance pattern...
-                    </div>
-                </div>
-                <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800">
-                    <canvas id="subjectChart"></canvas>
-                </div>
-            </div>
-
-            <h3 class="text-xl font-bold mb-6">MISTAKE ANALYSIS BOOK</h3>
-            <div id="mistake-list" class="space-y-4"></div>
-        </div>
-    </div>
-
-    <script>
-        const API_KEY = "AIzaSyBmx9fxCWymcLkk_GNKVv9TBTp31P25Wn4";
-        let questions = [];
-        let userAnswers = {};
-        let currentIdx = 0;
-        let timerSeconds = 10800;
-
-        // PDF JS Config
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-        // Event: File Upload
-        document.getElementById('upload-box').onclick = () => document.getElementById('pdf-file').click();
-        document.getElementById('pdf-file').onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
             
-            document.getElementById('status').innerText = "AI Vision processing your PDF (all pages)...";
-            await processPDF(file);
-        };
-
-        async function processPDF(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-            
-            for (let i = 1; i <= pdf.numPages; i++) {
-                document.getElementById('status').innerText = `Analysing Page ${i} of ${pdf.numPages}...`;
-                const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 2.0 });
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                await page.render({ canvasContext: ctx, viewport }).promise;
+            <div class="flex-1 overflow-y-auto p-8 text-lg">
+                <div id="q-text-content" class="mb-8 font-medium text-gray-800 leading-relaxed"></div>
+                <div id="q-image-box" class="hidden mb-8 max-w-2xl border-2 border-gray-200 rounded p-2">
+                    <img id="q-image-src" src="" class="w-full">
+                </div>
                 
-                const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                await callGemini(base64, i);
+                <div id="options-container" class="grid gap-4 max-w-3xl">
+                    </div>
+            </div>
+
+            <footer class="bg-gray-100 p-4 border-t flex justify-between items-center">
+                <div class="flex gap-2">
+                    <button onclick="markForReview()" class="px-6 py-2 bg-purple-100 text-purple-700 border border-purple-300 rounded hover:bg-purple-200">Mark for Review & Next</button>
+                    <button onclick="clearResponse()" class="px-6 py-2 border rounded hover:bg-gray-200">Clear Response</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="changeQ(-1)" class="px-6 py-2 border rounded hover:bg-gray-200">Previous</button>
+                    <button onclick="changeQ(1)" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">Save & Next</button>
+                </div>
+            </footer>
+        </main>
+
+        <aside class="w-80 bg-gray-50 flex flex-col">
+            <div class="p-4 flex items-center gap-4 bg-blue-50 border-b">
+                <div class="h-14 w-14 bg-gray-300 rounded"></div>
+                <div class="text-sm">
+                    <p class="text-gray-500 italic">Candidate:</p>
+                    <p class="font-bold">JEE ASPIRANT</p>
+                </div>
+            </div>
+            
+            <div id="palette-grid" class="flex-1 p-4 grid grid-cols-5 gap-3 content-start overflow-y-auto">
+                </div>
+
+            <div class="p-4 bg-white border-t space-y-2 text-[11px] font-bold text-gray-600 uppercase">
+                <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2"><span class="palette-btn answered flex items-center justify-center">0</span> Answered</span>
+                    <span class="flex items-center gap-2"><span class="palette-btn visited flex items-center justify-center">0</span> Not Answered</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2"><span class="palette-btn not-visited flex items-center justify-center">0</span> Not Visited</span>
+                    <span class="flex items-center gap-2"><span class="palette-btn marked flex items-center justify-center">0</span> Marked for Review</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div id="screen-analysis" class="hidden min-h-screen bg-slate-50 p-8 pb-20 overflow-y-auto">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <header class="flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-black text-slate-800">Advanced Analysis Report</h1>
+                <p class="text-slate-500">Deep performance insight based on AI processing</p>
+            </div>
+            <button onclick="window.location.reload()" class="bg-slate-800 text-white px-6 py-2 rounded-lg font-bold">Take Another Test</button>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-blue-500">
+                <p class="text-xs font-bold text-gray-400 uppercase">Total Score</p>
+                <p id="stat-score" class="text-4xl font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-green-500">
+                <p class="text-xs font-bold text-gray-400 uppercase">Accuracy</p>
+                <p id="stat-acc" class="text-4xl font-black text-green-600">0%</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-red-500">
+                <p class="text-xs font-bold text-gray-400 uppercase">Silly Mistakes</p>
+                <p id="stat-silly" class="text-4xl font-black text-red-500">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-purple-500">
+                <p class="text-xs font-bold text-gray-400 uppercase">Time/Q (Avg)</p>
+                <p id="stat-time" class="text-4xl font-black text-slate-800">1.2m</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-slate-800 text-white p-8 rounded-3xl shadow-xl">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">AI Mentor Plan <span class="text-xs bg-blue-500 px-2 py-0.5 rounded italic">Beta</span></h2>
+                <div id="mentor-html" class="space-y-4 text-slate-300 leading-relaxed">
+                    Generating your weekly improvement roadmap...
+                </div>
+            </div>
+            
+            <div class="bg-white p-8 rounded-3xl shadow-sm border">
+                <h2 class="font-bold mb-6">Mistake Classification</h2>
+                <div id="mistake-chart" class="space-y-4">
+                    </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+            <div class="bg-slate-50 p-4 border-b font-bold">SMART MISTAKE BOOK (All Incorrect Questions)</div>
+            <div id="mistake-book-list" class="divide-y"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_KEY = "AIzaSyBmx9fxCWymcLkk_GNKVv9TBTp31P25Wn4";
+    let questions = [];
+    let responses = {}; // { qId: { choice: 'A', status: 'answered', time: 0, mistakes: [] } }
+    let currentIdx = 0;
+    let timerInterval;
+    let timeLeft = 10800;
+
+    // Initialize PDF.js
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    document.getElementById('file-input').onchange = async (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+
+        document.getElementById('loader').classList.remove('hidden');
+        document.getElementById('dropzone').classList.add('hidden');
+        
+        await processPDF(file);
+    };
+
+    async function processPDF(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        const totalPages = pdf.numPages;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const progress = Math.round((i / totalPages) * 100);
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('status-text').innerText = `AI Vision Scanning: Page ${i} of ${totalPages}...`;
+            
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 2.0 });
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            
+            const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            await extractQuestions(base64);
+        }
+        startCBT();
+    }
+
+    async function extractQuestions(base64) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        const prompt = `JEE Exam OCR. Extract ALL questions from this page image. If a question contains complex math/diagrams, set "hasImg": true. JSON ONLY: [{"q":"text","options":["optA","optB","optC","optD"],"correct":"A","subject":"Maths","chapter":"Trig","hasImg":true}]`;
+        
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }] })
+            });
+            const data = await resp.json();
+            const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "");
+            const parsed = JSON.parse(text);
+            
+            parsed.forEach(q => {
+                q.id = Math.random().toString(36).substr(2, 9);
+                if(q.hasImg) q.imgData = `data:image/jpeg;base64,${base64}`;
+                questions.push(q);
+            });
+        } catch(e) { console.error("Extraction error", e); }
+    }
+
+    function startCBT() {
+        document.getElementById('screen-start').classList.add('hidden');
+        document.getElementById('screen-exam').classList.remove('hidden');
+        renderQuestion();
+        renderPalette();
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const h = Math.floor(timeLeft / 3600);
+            const m = Math.floor((timeLeft % 3600) / 60);
+            const s = timeLeft % 60;
+            document.getElementById('main-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            if(timeLeft <= 0) submitExam();
+        }, 1000);
+    }
+
+    function renderQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('current-subject-label').innerText = `SECTION: ${q.subject.toUpperCase()}`;
+        document.getElementById('q-label').innerText = `Question No. ${currentIdx + 1}`;
+        document.getElementById('q-text-content').innerText = q.q;
+        
+        const imgBox = document.getElementById('q-image-box');
+        if(q.hasImg) {
+            imgBox.classList.remove('hidden');
+            document.getElementById('q-image-src').src = q.imgData;
+        } else {
+            imgBox.classList.add('hidden');
+        }
+
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = "";
+        q.options.forEach((opt, i) => {
+            const char = String.fromCharCode(65 + i);
+            const div = document.createElement('div');
+            div.onclick = () => selectOption(char);
+            div.className = `p-4 border-2 rounded-xl cursor-pointer transition flex items-center gap-4 ${responses[q.id]?.choice === char ? 'border-blue-600 bg-blue-50' : 'hover:bg-gray-50 border-gray-100'}`;
+            div.innerHTML = `<span class="h-6 w-6 rounded-full border border-gray-300 flex items-center justify-center text-xs font-bold ${responses[q.id]?.choice === char ? 'bg-blue-600 border-blue-600 text-white' : ''}">${char}</span> ${opt}`;
+            optContainer.appendChild(div);
+        });
+
+        // Update palette to 'visited' (red) if not answered
+        if(!responses[q.id]) responses[q.id] = { status: 'visited', choice: null, mistakes: [] };
+    }
+
+    function selectOption(char) {
+        responses[questions[currentIdx].id].choice = char;
+        responses[questions[currentIdx].id].status = 'answered';
+        renderQuestion();
+        renderPalette();
+    }
+
+    function clearResponse() {
+        responses[questions[currentIdx].id].choice = null;
+        responses[questions[currentIdx].id].status = 'visited';
+        renderQuestion();
+        renderPalette();
+    }
+
+    function markForReview() {
+        responses[questions[currentIdx].id].status = 'marked';
+        changeQ(1);
+    }
+
+    function renderPalette() {
+        const grid = document.getElementById('palette-grid');
+        grid.innerHTML = "";
+        questions.forEach((q, i) => {
+            const status = responses[q.id]?.status || 'not-visited';
+            const btn = document.createElement('button');
+            btn.innerText = i + 1;
+            btn.onclick = () => { currentIdx = i; renderQuestion(); renderPalette(); };
+            btn.className = `palette-btn flex items-center justify-center ${status === 'answered' ? 'answered' : status === 'marked' ? 'marked' : status === 'visited' ? 'visited' : 'not-visited'}`;
+            grid.appendChild(btn);
+        });
+    }
+
+    function changeQ(dir) {
+        currentIdx = Math.max(0, Math.min(questions.length - 1, currentIdx + dir));
+        renderQuestion();
+        renderPalette();
+    }
+
+    async function submitExam() {
+        clearInterval(timerInterval);
+        document.getElementById('screen-exam').classList.add('hidden');
+        document.getElementById('screen-analysis').classList.remove('hidden');
+
+        let score = 0, correct = 0, wrong = 0, silly = 0;
+        const bookList = document.getElementById('mistake-book-list');
+
+        questions.forEach((q, i) => {
+            const userAns = responses[q.id]?.choice;
+            if(userAns === q.correct) {
+                score += 4; correct++;
+            } else if(userAns) {
+                score -= 1; wrong++;
+                silly++; // Simplified assumption for analysis
+                
+                // Add to Mistake Book
+                const div = document.createElement('div');
+                div.className = "p-6 bg-white";
+                div.innerHTML = `
+                    <div class="flex justify-between mb-2"><span class="font-bold text-red-600">Q${i+1} (${q.subject})</span><span class="text-xs bg-gray-100 px-2 py-1 rounded">Chapter: ${q.chapter || 'General'}</span></div>
+                    <p class="text-gray-700 mb-4">${q.q}</p>
+                    <div class="flex gap-4 text-xs">
+                        <span class="font-bold text-red-600 uppercase">Your Answer: ${userAns}</span>
+                        <span class="font-bold text-green-600 uppercase">Correct: ${q.correct}</span>
+                    </div>
+                `;
+                bookList.appendChild(div);
             }
-            startExam();
-        }
+        });
 
-        async function callGemini(base64, pageNum) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-            const prompt = `Act as JEE Exam Parser. Extract all questions from this page image. If a question has a complex diagram/math, set "hasImg": true. Use LaTeX for math. JSON ONLY format: [{"q":"text","options":["A","B","C","D"],"ans":"A","sub":"Physics","chap":"Rotational","hasImg":true}]`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }]
-                })
-            });
-            const data = await response.json();
-            try {
-                const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "");
-                const parsed = JSON.parse(text);
-                parsed.forEach(q => {
-                    q.id = Math.random().toString(36).substr(2, 9);
-                    if(q.hasImg) q.imgData = `data:image/jpeg;base64,${base64}`;
-                    questions.push(q);
-                });
-            } catch (err) { console.error("JSON Error", err); }
-        }
+        document.getElementById('stat-score').innerText = score;
+        document.getElementById('stat-acc').innerText = Math.round((correct / (correct+wrong)) * 100) || 0 + "%";
+        document.getElementById('stat-silly').innerText = silly;
 
-        function startExam() {
-            document.getElementById('screen-upload').classList.add('hidden');
-            document.getElementById('screen-exam').classList.remove('hidden');
-            renderPalette();
-            renderQuestion();
-            startTimer();
-        }
+        await generateAIPlan(correct, wrong, score);
+    }
 
-        function renderQuestion() {
-            const q = questions[currentIdx];
-            document.getElementById('q-subject').innerText = q.sub.toUpperCase();
-            document.getElementById('q-number').innerText = `Question ${currentIdx + 1}`;
-            document.getElementById('q-text').innerText = q.q;
-            
-            const imgBox = document.getElementById('q-image-container');
-            if(q.hasImg) {
-                imgBox.classList.remove('hidden');
-                document.getElementById('q-image').src = q.imgData;
-            } else {
-                imgBox.classList.add('hidden');
-            }
-
-            const optionsArea = document.getElementById('options-area');
-            optionsArea.innerHTML = "";
-            q.options.forEach((opt, i) => {
-                const char = String.fromCharCode(65 + i);
-                const btn = document.createElement('button');
-                btn.className = `p-4 text-left border rounded-xl font-medium transition ${userAnswers[q.id] === char ? 'bg-indigo-100 border-indigo-600 ring-1' : 'bg-white hover:bg-gray-50'}`;
-                btn.innerHTML = `<span class="font-bold mr-4 text-indigo-600">${char}.</span> ${opt}`;
-                btn.onclick = () => {
-                    userAnswers[q.id] = char;
-                    renderQuestion();
-                    renderPalette();
-                };
-                optionsArea.appendChild(btn);
-            });
-        }
-
-        function renderPalette() {
-            const p = document.getElementById('palette');
-            p.innerHTML = "";
-            questions.forEach((q, i) => {
-                const btn = document.createElement('button');
-                btn.className = `h-10 w-full rounded font-bold text-xs border ${currentIdx === i ? 'ring-2 ring-black' : ''} ${userAnswers[q.id] ? 'bg-green-500 text-white border-green-600' : 'bg-gray-200 text-gray-600'}`;
-                btn.innerText = i + 1;
-                btn.onclick = () => { currentIdx = i; renderQuestion(); };
-                p.appendChild(btn);
-            });
-        }
-
-        function nextQ() { if(currentIdx < questions.length - 1) { currentIdx++; renderQuestion(); renderPalette(); } }
-        function prevQ() { if(currentIdx > 0) { currentIdx--; renderQuestion(); renderPalette(); } }
-
-        function startTimer() {
-            setInterval(() => {
-                timerSeconds--;
-                const h = Math.floor(timerSeconds / 3600);
-                const m = Math.floor((timerSeconds % 3600) / 60);
-                const s = timerSeconds % 60;
-                document.getElementById('exam-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-            }, 1000);
-        }
-
-        async function finishTest() {
-            document.getElementById('screen-exam').classList.add('hidden');
-            document.getElementById('screen-analysis').classList.remove('hidden');
-            
-            let score = 0, correct = 0, wrong = 0;
-            questions.forEach(q => {
-                const ans = userAnswers[q.id];
-                if(ans === q.ans) { score += 4; correct++; }
-                else if(ans) { score -= 1; wrong++; }
-            });
-
-            document.getElementById('final-score').innerText = score;
-            document.getElementById('final-acc').innerText = Math.round((correct / (correct+wrong)) * 100) || 0 + "%";
-            document.getElementById('final-wrong').innerText = wrong;
-            document.getElementById('final-potential').innerText = score + (wrong * 5);
-
-            // Generate Mistake Book
-            const list = document.getElementById('mistake-list');
-            questions.forEach((q, i) => {
-                if(userAnswers[q.id] && userAnswers[q.id] !== q.ans) {
-                    const item = document.createElement('div');
-                    item.className = "bg-gray-900 p-6 rounded-2xl border border-red-900/30";
-                    item.innerHTML = `<h4 class="font-bold text-red-400 mb-2">Q${i+1} - Incorrect</h4><p class="text-sm text-gray-300 mb-4">${q.q}</p>
-                    <div class="flex gap-4 text-xs font-bold"><span class="text-red-500">YOU: ${userAnswers[q.id]}</span><span class="text-green-500">CORRECT: ${q.ans}</span></div>
-                    <button onclick="getPracticeQ('${q.id}')" class="mt-4 text-xs bg-indigo-600 px-3 py-1 rounded">Generate Practice Q</button>
-                    <div id="pract-${q.id}" class="mt-4 hidden p-4 bg-black rounded text-xs text-yellow-200">Generating...</div>`;
-                    list.appendChild(item);
-                }
-            });
-
-            getMentorPlan(correct, wrong, score);
-        }
-
-        async function getMentorPlan(c, w, s) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-            const prompt = `Act as Senior JEE Mentor. Student got ${c} correct, ${w} wrong, Score ${s}. Create a 7-day plan. Format as HTML.`;
-            const response = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await response.json();
-            document.getElementById('mentor-text').innerHTML = data.candidates[0].content.parts[0].text;
-        }
-
-        async function getPracticeQ(qId) {
-            const box = document.getElementById(`pract-${qId}`);
-            box.classList.remove('hidden');
-            const originalQ = questions.find(x => x.id === qId);
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-            const prompt = `Create a similar JEE question for concept: ${originalQ.q}. Give JSON: {"q":"text","options":[],"ans":"A"}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await response.json();
-            const res = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "");
-            const pq = JSON.parse(res);
-            box.innerHTML = `<p class="font-bold border-b border-yellow-900 mb-2 pb-1">AI GENERATED PRACTICE</p><p>${pq.q}</p><p class="mt-2 font-bold text-green-400">Answer: ${pq.ans}</p>`;
-        }
-    </script>
+    async function generateAIPlan(c, w, s) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        const prompt = `JEE Mentor. User: ${c} Correct, ${w} Wrong, Score ${s}. Give a 7-day study target to fix weak areas. HTML format with <b> and <ul>. Keep it encouraging but data-driven.`;
+        
+        try {
+            const r = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+            const data = await r.json();
+            document.getElementById('mentor-html').innerHTML = data.candidates[0].content.parts[0].text;
+        } catch(e) { document.getElementById('mentor-html').innerText = "AI Mentor temporarily unavailable."; }
+    }
+</script>
 </body>
 </html>
