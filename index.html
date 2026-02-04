@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEE AI Mentor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div id="app" class="p-5 text-center">
+        <h1 class="text-3xl font-bold text-blue-400 mb-5">JEE AI Exam Engine</h1>
+        <input type="text" id="apiKey" placeholder="Gemini API Key डालें" class="bg-gray-800 p-3 rounded mb-4 w-full max-w-md border border-gray-600">
+        <br>
+        <input type="file" id="pdfUpload" accept=".pdf" class="mb-5">
+        <div id="status" class="text-yellow-400"></div>
+        <div id="examArea" class="hidden mt-10 p-5 bg-white text-black rounded-xl max-w-4xl mx-auto">
+            </div>
+    </div>
+
+    <script>
+        // यहाँ हम AI और PDF का लॉजिक डालेंगे
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // लॉजिक के लिए अगली फाइल में कोड होगा
+    </script>
+</body>
+</html>
